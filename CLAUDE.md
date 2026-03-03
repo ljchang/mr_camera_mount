@@ -15,9 +15,12 @@ LED (in a titanium housing) to the MRC Systems mounting bar.
 | LED bore depth | 15 mm |
 | LED housing material | Titanium |
 
-The spacer includes a rectangular tab with a threaded set-screw hole to clamp the LED
-in place. The inner bore slides onto a mounting bar that can be tightened to set the
-angle.
+A rectangular tab extends from the cylinder and houses a horizontal LED bore
+(perpendicular to the bar axis). A vertical threaded set-screw enters from the
+top of the tab and pushes down onto the LED to lock it in place.
+The cylinder is solid (no clamping slit). The bar bore is concentric with the
+outer cylinder. The spacer slides onto a mounting bar that can be tightened
+to hold the correct angle.
 
 ## Tech Stack
 - **CAD**: OpenSCAD (parametric, text-based 3D modeling)
