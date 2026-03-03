@@ -2,11 +2,17 @@
 // led_spacer.scad — MR-Compatible IR LED Spacer Mount
 //
 // Cylinder slides onto the MRC Systems bar (bar axis = Z).
-// A rectangular tab extends from the cylinder surface in +X,
-// overlapping slightly for a solid one-piece union.
-// The LED bore runs horizontally along Y (aligned with the
-// cylinder width). A threaded set-screw enters from the outer
-// face (+X) and presses inward against the LED.
+// A tab smoothly transitions from the cylinder's circular
+// profile to a rectangular cross-section housing the LED bore.
+// This transition lets other spacers stack against the cylinder
+// without interference. The LED bore runs along Y. A nylon M8
+// thumbscrew self-taps into a plain hole from the +X face to
+// clamp the LED.
+//
+// Hardware:
+//   - M6 nylon thumbscrew (MR-safe, hand-tightenable)
+//   - Screw hole is 5.0 mm (M6 tap drill); tap after printing
+//   - M6 × 1.0 taper tap + tap wrench needed for threading
 //
 // Coordinate system:
 //   Z = bar / cylinder axis
@@ -15,21 +21,39 @@
 // ============================================================
 
 include <parameters.scad>
-include <threads.scad>
 
 // ----------------------------------------------------------
-// Main body: cylinder + rectangular tab (one solid piece)
+// Main body: cylinder + transition zone + rectangular tab
 // ----------------------------------------------------------
 module spacer_body() {
+    rect_start_x = spacer_od / 2 + transition_len;
+
     union() {
         // --- Main cylinder (solid) ---
         cylinder(d = spacer_od, h = spacer_height);
 
-        // --- Rectangular tab ---
-        // Overlaps into cylinder for a solid joint.
-        // Centred on cylinder in Y and Z.
-        translate([tab_start_x, -tab_width_y / 2, tab_z_offset])
-            cube([tab_width_x, tab_width_y, tab_height_z]);
+        // --- Transition zone ---
+        // hull() morphs from a thin arc of the cylinder surface
+        // (circular profile, matching cylinder height) to the full
+        // rectangular cross-section.
+        hull() {
+            // Thin arc slice at the cylinder surface
+            intersection() {
+                cylinder(d = spacer_od, h = spacer_height);
+                translate([spacer_od / 2 - 1, -spacer_od / 2, 0])
+                    cube([1.01, spacer_od, spacer_height]);
+            }
+
+            // Full rectangular cross-section at transition end
+            translate([rect_start_x, -tab_width_y / 2, tab_z_offset])
+                cube([0.01, tab_width_y, tab_height_z]);
+        }
+
+        // --- Rectangular block (LED bore housing + screw wall) ---
+        translate([rect_start_x, -tab_width_y / 2, tab_z_offset])
+            cube([tab_outer_x - rect_start_x,
+                  tab_width_y,
+                  tab_height_z]);
     }
 }
 
@@ -43,20 +67,17 @@ module spacer_cuts() {
                  h = spacer_height + 2);
 
     // --- LED bore (horizontal through-hole along Y) ---
-    // Aligned with cylinder width, centred at (led_bore_cx, 0, spacer_height/2).
-    // Goes completely through the tab in Y.
     translate([led_bore_cx, -tab_width_y / 2 - 1, spacer_height / 2])
         rotate([-90, 0, 0])
             cylinder(d = led_bore_dia + printer_tol * 2,
                      h = tab_width_y + 2);
 
-    // --- Threaded set-screw hole (horizontal, from +X face) ---
-    // Enters from outer face, travels through screw_wall into LED bore.
+    // --- Screw hole (plain cylinder for M8 nylon self-tapping) ---
+    // Enters from +X face, goes through screw_wall into LED bore.
     translate([tab_outer_x + 1, 0, screw_z])
         rotate([0, -90, 0])
-            threaded_hole(screw_dia, screw_pitch,
-                          screw_wall + 2,
-                          screw_clearance);
+            cylinder(d = screw_hole_dia,
+                     h = screw_wall + 2);
 }
 
 // ----------------------------------------------------------
@@ -70,32 +91,6 @@ module led_spacer() {
 }
 
 // ----------------------------------------------------------
-// Set-screw (separate part for printing)
+// Render
 // ----------------------------------------------------------
-module set_screw() {
-    screw_length = screw_wall + led_bore_dia / 4;
-    head_dia     = screw_dia * 2;
-    head_height  = 2;
-
-    union() {
-        // Hex head
-        cylinder(d = head_dia, h = head_height, $fn = 6);
-
-        // Threaded shaft
-        translate([0, 0, head_height])
-            metric_thread(screw_dia, screw_pitch,
-                          screw_length - head_height,
-                          screw_clearance);
-    }
-}
-
-// ----------------------------------------------------------
-// Layout: mount + set-screw (well separated for printing)
-// ----------------------------------------------------------
-
-// Main spacer
 led_spacer();
-
-// Set-screw placed clear of mount
-translate([tab_outer_x + 20, 0, 0])
-    set_screw();
