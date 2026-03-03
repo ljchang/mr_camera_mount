@@ -1,0 +1,22 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# OpenSCAD generated files
+*.stl
+*.amf
+*.3mf
+*.off
+
+# Keep STL exports in exports/ tracked via .gitkeep
+!exports/.gitkeep
+
+# Secrets / keys
+.env
+*.pem
+*.key
+
+# Editor backups
+*~
+*.swp
+*.bak
